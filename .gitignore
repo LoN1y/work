@@ -1,0 +1,20 @@
+# 依赖与运行时产物
+node_modules/
+*.log
+
+# 浏览器调试缓存
+_edgeweb/
+_edgeweb2/
+
+# 本地备份与变更快照（含历史版本，不入库）
+.backup/
+
+# 测试与临时文件
+test_*.png
+*_test.json
+e2e_*.cjs
+fs_quick.json
+
+# 系统文件
+.DS_Store
+Thumbs.db
