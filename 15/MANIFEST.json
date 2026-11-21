@@ -1,0 +1,54 @@
+{
+  "created": "2026-11-22 00:53:51",
+  "label": "多语言片源搜索改造",
+  "files": {
+    "index.html": {
+      "sha256": "a5c60e3c84098c52fbc414d4706ce73cc47a0d1b3c89ac13584a858165352c82",
+      "size": 22362
+    },
+    "styles.css": {
+      "sha256": "e52f3286cd33d1ba0272f44d01ebc9fb0ed63519b4def70e6dec9511531bc11d",
+      "size": 37984
+    },
+    "app.js": {
+      "sha256": "e367e9f2aea91591ad58bbb80612a0489ecc37936c6f9ee226fd589bd59d6c4b",
+      "size": 102136
+    },
+    "启动网站.bat": {
+      "sha256": "733e902ab01036833b4af45e76864df13de8b9f73ec39fb145876fa47f8ad63a",
+      "size": 693
+    },
+    "devtool.js": {
+      "sha256": "bd21736794c5cc9b77e5c2ae7da00bcb78fe04f747aca6579bce72a0a6d2efcf",
+      "size": 2266
+    },
+    "修改记录.md": {
+      "sha256": "25c31d67e2753c768e5a3728aa78d6b1cd00867c611e8916244cc735007bb167",
+      "size": 6850
+    },
+    "server/server.js": {
+      "sha256": "e60afefa948d7b3a463ca1cdaaedc5a17cc0f46f8cd0de0221fc6ab46d827bee",
+      "size": 10397
+    },
+    "server/frameMatch.js": {
+      "sha256": "033a7fffca5467ffce04041bb803715c4972153cfbc5e9ef0c8c12eec7b42798",
+      "size": 8284
+    },
+    "server/webSearch.js": {
+      "sha256": "a1f94ff3048bb0c09779aae2c92bf8d2e1feaae5726a0bae501333ee9b495d2c",
+      "size": 8890
+    },
+    "server/browserMatch.js": {
+      "sha256": "05703ec25dc6b7351dd0f8599dca6823b4be00583ac53fb8fd50c56f196b1ad6",
+      "size": 11941
+    },
+    "server/package.json": {
+      "sha256": "a945f4f44877e76363121b4a986b0c830ea16b52c4753c0976485d3c60aca6be",
+      "size": 364
+    },
+    "server/package-lock.json": {
+      "sha256": "2dc9a8bbd2bdf55e6bd5e7e67662f032783b86120f1e37e5634bbaea9dd0fb0c",
+      "size": 38986
+    }
+  }
+}

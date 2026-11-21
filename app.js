@@ -424,8 +424,13 @@ const SYSTEM_FILM = `你是一名专业的影视画面识别分析师。你会�
    - 【绝对禁止】在无硬线索时给出诸如 "00:13:00"、"约第20分钟"、"00:28:00" 这类看似精确的数字——这会误导用户，且每次给的数字都不一样，是不可接受的。宁可诚实说"无法精确定位"，也不要编数字。
 4. 电影、纪录片或独立单元作品，episode 填 "—"；此时时刻指全片时刻。
 5. 【核验查询】生成 2-4 条用于精确核验时刻的搜索词 verificationQueries，格式为"作品名 第N集 关键台词/场景关键词 第几分钟"，让用户可到视频平台搜索定位。
-6. 所有文字使用简体中文。
-7. 只输出一个 JSON 对象，不要输出任何解释性前后缀。
+6. 【多语言片源搜索词 sourceQueries】系统需要联网找"可直接读取的短片源"做逐帧比对。请生成 4-6 条精准、指向短片段的搜索词，要求：
+   - 必须包含至少 1 条日文关键词（特摄/动漫作品尤其重要）：用日文原名 + 具体形态/角色 + 短片段词，如「仮面ライダージオウ グランドジオウ 初登場」「グランドジオウ 変身シーン」「仮面ライダー剣 キングフォーム 初変身」；日文原名不确定时用片假名/常见写法。
+   - 包含 1-2 条中文精准片段词：用作品中文名 + 形态/角色 + 「初登场/变身片段/PV/预告」，例如「假面骑士时王 崇皇时王 初登场 变身」「假面骑士剑 帝王形态 变身片段 PV」。避免"在线观看/完整版/全N集/下载"这类导向整剧平台页的词。
+   - 包含 1 条英文词：作品英文名 + form/first appearance/transformation scene/PV。
+   - 每条 8-40 字，短而精准，指向可被视频帧比对的短片段（预告/PV/变身镜头/初登场），而不是让用户去找整部剧。
+7. 所有文字使用简体中文（sourceQueries 中的日文/英文关键词除外，按原文写）。
+8. 只输出一个 JSON 对象，不要输出任何解释性前后缀。
 JSON 结构：
 {
   "summary": "2-3 句话的结果摘要",
@@ -442,6 +447,8 @@ JSON 结构：
     "timeBasisType": "hard（有客观时间线索）或 soft（仅软线索，时刻不可精确）"
   },
   "verificationQueries": ["作品名 第N集 台词/场景关键词 第几分钟", "..."],
+  "sourceQueries": ["用于搜索可比对短片源的多语言关键词，见下方详细说明，4-6 条"],
+  "officialShortHint": "若有可公开访问的官方短片源线索（PV/预告/官网视频/官方频道剪辑），写在这里；没有则空字符串",
   "confidence": "high|medium|low",
   "sceneDescription": "画面场景描述",
   "actors": ["可识别的演员或角色"],
@@ -1514,19 +1521,31 @@ async function callProbeSources(urls) {
   finally { clearTimeout(t); }
 }
 
-/** 生成片源搜索关键词 */
+/** 生成片源搜索关键词（多语言 + 精准短片段优先）
+ *  目标：找可被视频帧比对的短片段（PV/预告/变身/初登场），而不是导向整剧平台页。
+ *  优先用影视识别提示词产出的 sourceQueries（含日文/中文/英文），缺失时兜底拼接。
+ */
 function buildSourceQueries(data) {
+  const aiQueries = (data.sourceQueries || [])
+    .map((q) => String(q || "").trim())
+    .filter((q) => q.length >= 4 && q.length <= 60);
+  if (aiQueries.length) return aiQueries.slice(0, 6);
+
+  // 兜底：AI 没给 sourceQueries 时，自行拼多语言短片段词
   const work = data.workTitle && data.workTitle !== "未能确定" ? String(data.workTitle).replace(/[《》]/g, "") : "";
-  const ep = data.episode && !/^[—\-]|未知|未能/.test(data.episode) ? String(data.episode) : "";
   const original = data.originalTitle ? String(data.originalTitle) : "";
+  const hint = data.officialShortHint ? String(data.officialShortHint) : "";
   const q = [];
+  if (hint) q.push(hint);
   if (work) {
-    q.push(`${work} ${ep} 在线观看 完整版`.trim());
-    q.push(`${work} ${ep} 第几集 mp4`.trim());
+    q.push(`${work} 初登场 变身片段 PV`);
+    q.push(`${work} 预告 PV 短片段`);
   }
-  if (original) q.push(`${original} episode watch`.trim());
+  if (original) {
+    q.push(`${original} first appearance transformation scene PV`);
+  }
   if (!q.length && data.summary) q.push(String(data.summary).slice(0, 30));
-  return q.slice(0, 4);
+  return q.slice(0, 6);
 }
 
 /**
@@ -1534,8 +1553,11 @@ function buildSourceQueries(data) {
  * 命中 → 回写真实时刻 + 刷新综合结论；未命中 → 列候选供用户手动下载比对。
  */
 async function tryBrowserMatchFallback(data, sources) {
-  // 收集所有候选 URL（直链/平台/网页都试，网页里可能嵌 video）
-  const urls = [...new Set((sources || []).map((s) => s.url).filter((u) => /^https?:\/\//i.test(u)))].slice(0, 8);
+  // 优先级：直链 > 官方短片源 > 平台 > 免费站页面 > 普通网页。
+  // 官方 PV/预告多嵌公开 <video>，最可能抓到帧；免费站页面排在后面，主要供用户手动点开。
+  const order = { direct: 0, official: 1, platform: 2, free: 3, page: 4 };
+  const sorted = [...(sources || [])].sort((a, b) => (order[a.kind] ?? 5) - (order[b.kind] ?? 5));
+  const urls = [...new Set(sorted.map((s) => s.url).filter((u) => /^https?:\/\//i.test(u)))].slice(0, 8);
   if (!urls.length) {
     asSetProgress(100, "无可用片源");
     el.asSourcesLabel.textContent = "找到的片源候选";
@@ -1576,7 +1598,8 @@ async function tryBrowserMatchFallback(data, sources) {
     el.asResult.innerHTML =
       `<div class="as-result-head">多开播放未能抓到可比对画面</div>` +
       `<div class="as-result-line">${reason}。你可以：<br>` +
-      `① 点击候选打开页面，在平台内查看该集；② 下载对应视频后，用下方「视频帧精确比对」上传本地文件得到真实时刻。</div>`;
+      `① 点击候选里的「官方」或「免费站」链接手动打开查看（部分公开 PV/预告可直接播放）；` +
+      `② 下载对应视频后，用下方「视频帧精确比对」上传本地文件得到真实时刻。</div>`;
     await buildFinalConclusion(data, null);
   }
 }
@@ -1624,8 +1647,8 @@ async function runAutoSource(auto = false) {
     // 步骤2：展示候选 + 探测可直读性
     asSetProgress(38, `找到 ${sources.length} 条片源，正在探测可直读性…`);
     renderSourceCandidates(sources, null);
-    const probeUrls = sources.filter((s) => s.kind === "direct" || s.kind === "platform")
-      .slice(0, 10).map((s) => s.url);
+    const probeUrls = sources.filter((s) => s.kind === "direct" || s.kind === "official" || s.kind === "platform")
+      .slice(0, 12).map((s) => s.url);
     let readable = [];
     if (probeUrls.length) {
       const probed = await callProbeSources(probeUrls);
@@ -1722,7 +1745,7 @@ function runBrowserMatch(urls, onProgress) {
 function renderSourceCandidates(sources, probed) {
   el.asSources.classList.remove("hidden");
   el.asSourceList.innerHTML = "";
-  const kindLabel = { direct: "直链", platform: "平台", page: "网页" };
+  const kindLabel = { direct: "直链", official: "官方", free: "免费站", platform: "平台", page: "网页" };
   const probeMap = {};
   (probed || []).forEach((p) => { probeMap[p.url] = p; });
   sources.slice(0, 12).forEach((s) => {

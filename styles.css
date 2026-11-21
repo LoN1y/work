@@ -460,6 +460,8 @@ button { cursor: pointer; }
 a.as-source:hover { border-color: rgba(70,215,255,.45); background: rgba(70,215,255,.07); }
 .as-kind { flex: none; font-size: 9px; font-weight: 700; padding: 3px 7px; border-radius: 6px; letter-spacing: .3px; }
 .as-kind.direct { color: #9fe9ff; background: rgba(70,215,255,.14); border: 1px solid rgba(70,215,255,.3); }
+.as-kind.official { color: #9dffcf; background: rgba(60,220,150,.14); border: 1px solid rgba(60,220,150,.3); }
+.as-kind.free { color: #ffd89d; background: rgba(255,180,70,.14); border: 1px solid rgba(255,180,70,.3); }
 .as-kind.platform { color: #c7bcff; background: rgba(124,108,255,.14); border: 1px solid rgba(124,108,255,.3); }
 .as-kind.page { color: var(--muted); background: rgba(255,255,255,.05); border: 1px solid var(--border); }
 .as-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
