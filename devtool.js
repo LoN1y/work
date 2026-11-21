@@ -23,7 +23,7 @@ const LOG_FILE = path.join(ROOT, "修改记录.md");
 const TRACKED = [
   "index.html", "styles.css", "app.js", "启动网站.bat",
   "devtool.js", "backup.bat", "restore.bat", "修改记录.md",
-  "server/server.js", "server/frameMatch.js", "server/webSearch.js",
+  "server/server.js", "server/frameMatch.js", "server/webSearch.js", "server/browserMatch.js",
   "server/package.json", "server/package-lock.json",
 ];
 

@@ -1,0 +1,58 @@
+{
+  "created": "2026-11-20 09:31:42",
+  "label": "改造前-片源搜索+帧比对备选链路",
+  "files": {
+    "index.html": {
+      "sha256": "e2eeb91bf85b4fd348bf73c53ae689c3052f007fd12738d256c68bb8ee9c7c4a",
+      "size": 19314
+    },
+    "styles.css": {
+      "sha256": "d09a63dcc2074c29daa8df17b98513d33e032826efe5f4c431119cf924be978b",
+      "size": 32458
+    },
+    "app.js": {
+      "sha256": "4310d30ecf41084c5fdf417db9e8f83fe7a321916950313a76dfbad5e52bfa7c",
+      "size": 74224
+    },
+    "启动网站.bat": {
+      "sha256": "733e902ab01036833b4af45e76864df13de8b9f73ec39fb145876fa47f8ad63a",
+      "size": 693
+    },
+    "devtool.js": {
+      "sha256": "54330e1ec4dc6590d04f5c84f6e06fb1a6a036b05d5fd0d54930d24e485dba07",
+      "size": 6806
+    },
+    "backup.bat": {
+      "sha256": "d8d598843ddc0c7f78bfd0b9fc4fb7ecb919979d39ad4fa9770edd04e358e17b",
+      "size": 152
+    },
+    "restore.bat": {
+      "sha256": "ff55cd75fde9f80b457e5245414bb7717c8ca7ad36d4741ef12b99d2cdf8fa79",
+      "size": 250
+    },
+    "修改记录.md": {
+      "sha256": "b8f4f9f6481ea81f8faf737941db6967b6d8c7e727ed0d234ed9f23f208ee1ef",
+      "size": 2505
+    },
+    "server/server.js": {
+      "sha256": "5d26ebe294f3380557f2ec980b73afb53d087d55fe18d057c09b114abb1328d7",
+      "size": 6817
+    },
+    "server/frameMatch.js": {
+      "sha256": "dfdd816f93c270312f58552b77ee5d42fa0128c842314dbad5a0bab0e3f9b3e3",
+      "size": 8240
+    },
+    "server/webSearch.js": {
+      "sha256": "55cd5b6267c250baf796819e6ec9f13ae238c3cad08902d44202a57f420192f3",
+      "size": 4619
+    },
+    "server/package.json": {
+      "sha256": "a945f4f44877e76363121b4a986b0c830ea16b52c4753c0976485d3c60aca6be",
+      "size": 364
+    },
+    "server/package-lock.json": {
+      "sha256": "2dc9a8bbd2bdf55e6bd5e7e67662f032783b86120f1e37e5634bbaea9dd0fb0c",
+      "size": 38986
+    }
+  }
+}

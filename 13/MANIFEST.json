@@ -1,0 +1,62 @@
+{
+  "created": "2026-11-20 14:32:13",
+  "label": "多开播放比对升级完成",
+  "files": {
+    "index.html": {
+      "sha256": "a5c60e3c84098c52fbc414d4706ce73cc47a0d1b3c89ac13584a858165352c82",
+      "size": 22362
+    },
+    "styles.css": {
+      "sha256": "367cc457590c070085c5a46b92fafed6d0d001fb661728e6cebbe5ef62863bdd",
+      "size": 37766
+    },
+    "app.js": {
+      "sha256": "d96d3eb30fc64f0de7d1e0c59d3e8ee4d83859f790f08a1d3d9cacb4c8a75c70",
+      "size": 99701
+    },
+    "启动网站.bat": {
+      "sha256": "733e902ab01036833b4af45e76864df13de8b9f73ec39fb145876fa47f8ad63a",
+      "size": 693
+    },
+    "devtool.js": {
+      "sha256": "1904e57c9175c11ef5caeba025d948076bcfe6d4e1af672ddc51e7a2a1be2158",
+      "size": 6832
+    },
+    "backup.bat": {
+      "sha256": "d8d598843ddc0c7f78bfd0b9fc4fb7ecb919979d39ad4fa9770edd04e358e17b",
+      "size": 152
+    },
+    "restore.bat": {
+      "sha256": "ff55cd75fde9f80b457e5245414bb7717c8ca7ad36d4741ef12b99d2cdf8fa79",
+      "size": 250
+    },
+    "修改记录.md": {
+      "sha256": "6a4275a3f930fa420c989fa8e738f03aeb7de8b994039c9faa0ab80d36f50347",
+      "size": 5680
+    },
+    "server/server.js": {
+      "sha256": "e60afefa948d7b3a463ca1cdaaedc5a17cc0f46f8cd0de0221fc6ab46d827bee",
+      "size": 10397
+    },
+    "server/frameMatch.js": {
+      "sha256": "033a7fffca5467ffce04041bb803715c4972153cfbc5e9ef0c8c12eec7b42798",
+      "size": 8284
+    },
+    "server/webSearch.js": {
+      "sha256": "46cbfe5dc8bac978cb6f19635d8ff53553ceb7af91eae259100b6a6fde96d5d8",
+      "size": 6613
+    },
+    "server/browserMatch.js": {
+      "sha256": "05703ec25dc6b7351dd0f8599dca6823b4be00583ac53fb8fd50c56f196b1ad6",
+      "size": 11941
+    },
+    "server/package.json": {
+      "sha256": "a945f4f44877e76363121b4a986b0c830ea16b52c4753c0976485d3c60aca6be",
+      "size": 364
+    },
+    "server/package-lock.json": {
+      "sha256": "2dc9a8bbd2bdf55e6bd5e7e67662f032783b86120f1e37e5634bbaea9dd0fb0c",
+      "size": 38986
+    }
+  }
+}

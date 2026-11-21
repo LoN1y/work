@@ -9,6 +9,7 @@
  *   POST /api/websearch          真实联网搜索（来源溯源）
  *   POST /api/find-sources       影视兜底：片源定向搜索与分类
  *   POST /api/probe-sources      影视兜底：并发探测片源是否可直读
+ *   POST /api/browser-match      多开播放比对：浏览器打开多片源抓帧定位时刻
  *   POST /api/resolve-url        探测在线视频 URL 是否可直读
  * ========================================================= */
 const express = require("express");
@@ -20,8 +21,9 @@ const os = require("os");
 const crypto = require("crypto");
 const { execFile } = require("child_process");
 const ffmpegPath = require("@ffmpeg-installer/ffmpeg").path;
-const { locateMoment } = require("./frameMatch");
+const { locateMoment, imageToGray } = require("./frameMatch");
 const { webSearch, searchVideoSources } = require("./webSearch");
+const { matchMultipleSources } = require("./browserMatch");
 
 const app = express();
 const PORT = process.env.PORT || 3777;
@@ -128,6 +130,45 @@ app.post("/api/probe-sources", async (req, res) => {
   } catch (e) {
     res.json({ ok: false, readable: [], error: e?.message || "探测失败" });
   }
+});
+
+/** 多开播放比对：浏览器打开多个片源页，并发抓帧定位真实时刻 */
+app.post("/api/browser-match", upload.fields([{ name: "screenshot", maxCount: 1 }]), async (req, res) => {
+  const screenshot = req.files?.screenshot?.[0];
+  if (!screenshot) return res.status(400).json({ error: "缺少截图文件" });
+  let urls = [];
+  try { urls = Array.isArray(req.body?.urls) ? req.body.urls : JSON.parse(req.body?.urls || "[]"); } catch (_) {}
+  urls = urls.map((u) => String(u || "").trim()).filter((u) => /^https?:\/\//i.test(u)).slice(0, 8);
+  if (!urls.length) return res.status(400).json({ error: "没有可比对的片源 URL" });
+
+  const jobId = crypto.randomBytes(10).toString("hex");
+  jobs.set(jobId, { status: "queued", progress: 0, label: "任务已创建", result: null, error: null });
+
+  (async () => {
+    const job = jobs.get(jobId);
+    try {
+      job.status = "running";
+      job.label = "解析截图特征";
+      const gray = await imageToGray(screenshot.path);
+      job.progress = 8;
+      const r = await matchMultipleSources(urls, gray, {
+        concurrency: 3, coarseStep: 2, maxSeconds: 1800,
+        onProgress: (p, label) => { job.progress = 8 + Math.round(p * 0.92); job.label = label; },
+      });
+      job.result = r;
+      job.progress = 100;
+      job.status = r.ok ? "done" : "error";
+      job.label = r.ok ? "找到真实时刻" : "未能自动抓帧";
+      if (!r.ok) job.error = r.reason || "所有片源均无法自动抓帧";
+    } catch (e) {
+      job.status = "error";
+      job.error = e?.message || "多开比对过程出错";
+      job.label = "比对失败";
+    } finally {
+      setTimeout(() => { if (fs.existsSync(screenshot.path)) { try { fs.unlinkSync(screenshot.path); } catch (_) {} } }, 60_000);
+    }
+  })();
+  res.json({ jobId });
 });
 
 /** 创建比对任务 */

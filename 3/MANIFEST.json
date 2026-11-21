@@ -1,0 +1,54 @@
+{
+  "created": "2026-11-20 00:24:51",
+  "label": "建立备份与记录机制",
+  "files": {
+    "index.html": {
+      "sha256": "264b4ff490b8a14780fb7f98738faf3af2a0de5326a61fc9bfdf0fec89eabe67",
+      "size": 18065
+    },
+    "styles.css": {
+      "sha256": "7feb021d6bf488c520cdd0d4e234ac22d1d46fe2881ff90912fafd3df42e40d4",
+      "size": 29742
+    },
+    "app.js": {
+      "sha256": "636615fa4afa4c47bd14b0976a2c7da74f2292a919130d613df0fb2c00c58442",
+      "size": 60948
+    },
+    "启动网站.bat": {
+      "sha256": "733e902ab01036833b4af45e76864df13de8b9f73ec39fb145876fa47f8ad63a",
+      "size": 693
+    },
+    "devtool.js": {
+      "sha256": "a931aec5a85352712b34c7ea525a58b2fad5296064bc18f41b0a4a5c4388920f",
+      "size": 6783
+    },
+    "backup.bat": {
+      "sha256": "d8d598843ddc0c7f78bfd0b9fc4fb7ecb919979d39ad4fa9770edd04e358e17b",
+      "size": 152
+    },
+    "restore.bat": {
+      "sha256": "ff55cd75fde9f80b457e5245414bb7717c8ca7ad36d4741ef12b99d2cdf8fa79",
+      "size": 250
+    },
+    "修改记录.md": {
+      "sha256": "cb4c667e43bd45df89869968867f85658d8597c55f66940375f20b9dd2414f39",
+      "size": 635
+    },
+    "server/server.js": {
+      "sha256": "772cf401ad995fd22c4169ec82fe7ccf874df63b0522b2c976413f07f535001a",
+      "size": 6419
+    },
+    "server/frameMatch.js": {
+      "sha256": "dfdd816f93c270312f58552b77ee5d42fa0128c842314dbad5a0bab0e3f9b3e3",
+      "size": 8240
+    },
+    "server/package.json": {
+      "sha256": "a945f4f44877e76363121b4a986b0c830ea16b52c4753c0976485d3c60aca6be",
+      "size": 364
+    },
+    "server/package-lock.json": {
+      "sha256": "2dc9a8bbd2bdf55e6bd5e7e67662f032783b86120f1e37e5634bbaea9dd0fb0c",
+      "size": 38986
+    }
+  }
+}

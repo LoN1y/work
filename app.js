@@ -411,12 +411,17 @@ const SYSTEM_FILM = `你是一名专业的影视画面识别分析师。你会�
 严格要求：
 1. 你没有实时联网能力，绝不能声称"已查询数据库验证"。
 2. 作品名不确定时在 workTitle 中写"未能确定"，并在 analysis 中说明；绝不能编造不存在的作品。
-3. 【重要·时刻定位，必须给出推断，禁止直接放弃】
-   - 单张截图很难得到精确到秒的时间，但你必须尽力推断，禁止直接写"无法精确判断"就结束。
-   - 先逐项提取时间线索：是否有时间码/字幕时间戳、字幕台词内容、片头片尾字幕、片头曲/片尾曲画面、场景明暗（白天/夜晚）、演员服装与年龄、画面在剧情中的位置（开场/中段/高潮/结尾）、画质与色调风格。
-   - 基于这些线索给出：一个合理的时间区间 estimateRange（如 "00:08:00 - 00:14:00" 或 "本集前段 0-5 分钟"）和一个最佳单点估计 bestGuess（如 "00:11:00"）。
-   - 在 timestampBasis 中逐条列出推断依据。即使线索很少，也给出宽泛区间（如 "本集中段"），并说明不确定性。
-   - 只有完全没有任何可用线索时，estimateRange 才写"无法确定区间"，但仍要在 timestampBasis 说明缺少什么线索。
+3. 【时刻定位：诚实优先，严禁编造精确时刻——这是硬性要求】
+   单张截图通常无法精确到秒。你必须先判断画面中是否存在「硬时间线索」，再分两种情况处理，绝不能每次随意猜一个分钟数：
+   - 【硬时间线索】指画面里客观可见、能直接锚定时间的信息：画面内时间码/时钟、字幕时间戳、可辨识的台词字幕、片头曲/片尾曲/演职员字幕画面、明确的集数标识、带具体时间的场景（如新闻播报时间）。
+   - 情况 A（有硬线索）：据此给出 estimateRange（如 "00:08:00 - 00:14:00"）和 bestGuess（如 "00:11:00"），clueQuality 设 high 或 medium；timeBasisType 填 "hard"。在 timestampBasis 中逐条写明每条硬线索。
+   - 情况 B（无硬线索，只有服装/明暗/剧情阶段等软线索）：严禁编造任何 HH:MM:SS 或"约第N分钟"的具体数字！此时：
+     · estimateRange 固定写 "无可靠时间区间（仅能判断为一般场景）"，不要写"前段/中段/后段"这类仍会变化的阶段判断，更不要写具体分钟数；
+     · bestGuess 写 "无法精确定位（需帧比对）"；
+     · timestamp 同样写 "无法精确定位（无时间线索）"；
+     · clueQuality 必须写 "low"；timeBasisType 填 "soft"；
+     · 在 timestampBasis 中列出你观察到的软线索（如服装、场景、明暗），并明确写出"以上均为软线索，无法锚定精确时间，建议用视频帧比对确认"。
+   - 【绝对禁止】在无硬线索时给出诸如 "00:13:00"、"约第20分钟"、"00:28:00" 这类看似精确的数字——这会误导用户，且每次给的数字都不一样，是不可接受的。宁可诚实说"无法精确定位"，也不要编数字。
 4. 电影、纪录片或独立单元作品，episode 填 "—"；此时时刻指全片时刻。
 5. 【核验查询】生成 2-4 条用于精确核验时刻的搜索词 verificationQueries，格式为"作品名 第N集 关键台词/场景关键词 第几分钟"，让用户可到视频平台搜索定位。
 6. 所有文字使用简体中文。
@@ -428,12 +433,13 @@ JSON 结构：
   "originalTitle": "原名/英文名，未知则空字符串",
   "workType": "电影|电视剧|综艺|动漫|纪录片|短剧|其他",
   "episode": "第 N 集 / —",
-  "timestamp": "最佳单点估计，HH:MM:SS 或 '约第N分钟'；无明确线索时给宽泛描述",
+  "timestamp": "有硬线索时写 HH:MM:SS；无硬线索时只能写 '无法精确定位（无时间线索）'，禁止编造分钟数",
   "timestampAnalysis": {
-    "estimateRange": "时间区间估计，如 '00:08:00 - 00:14:00' 或 '本集中段'",
-    "bestGuess": "最佳单点估计",
-    "timestampBasis": ["逐条列出推断依据：时间码、台词、片头片尾、场景位置、服装年龄等"],
-    "clueQuality": "high|medium|low"
+    "estimateRange": "有硬线索写 '00:08:00 - 00:14:00'；无硬线索固定写 '无可靠时间区间（仅能判断为一般场景）'",
+    "bestGuess": "有硬线索写最佳单点；无硬线索写 '无法精确定位（需帧比对）'",
+    "timestampBasis": ["逐条列出依据；无硬线索时末尾必须写'以上均为软线索，无法锚定精确时间，建议用视频帧比对确认'"],
+    "clueQuality": "high|medium|low（无硬线索必须为 low）",
+    "timeBasisType": "hard（有客观时间线索）或 soft（仅软线索，时刻不可精确）"
   },
   "verificationQueries": ["作品名 第N集 台词/场景关键词 第几分钟", "..."],
   "confidence": "high|medium|low",
@@ -495,7 +501,7 @@ async function askAI(systemPrompt, userContent, controller) {
         ],
         stream: true,
         response_format: { type: "json_object" },
-        temperature: 0.2,
+        temperature: 0,
         signal: controller?.signal,
       });
       for await (const chunk of stream) {
@@ -1235,7 +1241,10 @@ async function initFrameMatch(data) {
 
 async function checkFmHealth() {
   // 依次尝试：同源 → 常见本地端口。找到可用的服务地址后写入 FM_API_BASE
-  const candidates = ["", "http://localhost:3777", "http://127.0.0.1:3777"];
+  // 注意：同源时必须写入绝对地址 location.origin，不能留空串——
+  // 空串虽然 fetch 相对路径能用，但会被 !FM_API_BASE 误判为"服务未启动"。
+  const origin = location.origin && location.origin !== "null" ? location.origin : "";
+  const candidates = [origin, "http://localhost:3777", "http://127.0.0.1:3777"].filter(Boolean);
   let ok = false;
   for (const base of candidates) {
     try {
@@ -1446,7 +1455,7 @@ function initAutoSource(data) {
 
   const vague = timestampIsVague(data);
   if (vague) {
-    el.autoSourceDesc.textContent = "当前时刻仅为 AI 粗估（线索不足）。系统会联网搜索该作品的片源，找出可直接读取的视频自动逐帧比对，得到真实时刻后汇总为最终结论。";
+    el.autoSourceDesc.textContent = "当前时刻无法精确定位。系统会联网搜索片源：先试直链逐帧比对，失败则自动多开浏览器播放各片源、逐画面抓帧比对，找出真实时刻后汇总为最终结论。";
     el.autoSourceBtn.classList.add("pulse-btn");
     // 自动启动兜底链路（用户无需操作）；runAutoSource 内部会先确认服务地址
     toast("时刻较模糊，正在自动搜索片源并比对…", 3200);
@@ -1465,7 +1474,7 @@ function resetAutoSourceUI() {
   el.asSourceList.innerHTML = "";
   state.asSources = [];
   el.autoSourceBtn.disabled = false;
-  el.autoSourceBtnText.textContent = "搜索片源并自动比对";
+  el.autoSourceBtnText.textContent = "搜索片源并多开比对";
 }
 
 function asSetProgress(pct, label) {
@@ -1518,6 +1527,58 @@ function buildSourceQueries(data) {
   if (original) q.push(`${original} episode watch`.trim());
   if (!q.length && data.summary) q.push(String(data.summary).slice(0, 30));
   return q.slice(0, 4);
+}
+
+/**
+ * 多开播放比对兜底：ffmpeg 直读失败后，用浏览器并发打开多个片源页抓帧定位。
+ * 命中 → 回写真实时刻 + 刷新综合结论；未命中 → 列候选供用户手动下载比对。
+ */
+async function tryBrowserMatchFallback(data, sources) {
+  // 收集所有候选 URL（直链/平台/网页都试，网页里可能嵌 video）
+  const urls = [...new Set((sources || []).map((s) => s.url).filter((u) => /^https?:\/\//i.test(u)))].slice(0, 8);
+  if (!urls.length) {
+    asSetProgress(100, "无可用片源");
+    el.asSourcesLabel.textContent = "找到的片源候选";
+    await buildFinalConclusion(data, null);
+    return;
+  }
+
+  asSetProgress(45, `多开 ${urls.length} 个片源，浏览器播放抓帧中…`);
+  el.asSourcesLabel.textContent = `找到的片源候选（正在多开播放比对 ${urls.length} 条）`;
+  el.asResult.classList.remove("hidden");
+  el.asResult.innerHTML = `<div class="as-result-head">多开播放比对中</div><div class="as-result-line">正在浏览器里并发打开片源、逐时间点抓画面，与你的截图比对…</div>`;
+
+  const r = await runBrowserMatch(urls, (p, label) => {
+    asSetProgress(45 + Math.round(p * 0.5), label || "多开播放比对中…");
+  });
+  asSetProgress(100, "多开比对完成");
+
+  if (r?.ok && r.best) {
+    // 命中真实时刻：回写 + 综合结论
+    const best = r.best;
+    state.frameResult = {
+      time: best.time, timeFormatted: best.timeFormatted,
+      similarity: best.similarity, ncc: best.ncc,
+      method: best.method, videoUrl: best.url,
+      videoDuration: best.videoDuration,
+    };
+    el.asResult.innerHTML =
+      `<div class="as-result-head">✅ 多开播放比对命中真实时刻</div>` +
+      `<div class="as-result-line">片源：<a href="${best.url}" target="_blank" rel="noopener">${best.url.slice(0, 90)}</a><br>` +
+      `精确时刻：<b>${best.timeFormatted}</b>　相似度：${best.similarity}%　方式：浏览器逐帧抓画面比对</div>`;
+    renderAutoFrameResult(state.frameResult, { url: best.url, title: "多开比对片源" });
+    updateTimestampWithExact(state.frameResult);
+    await buildFinalConclusion(data, state.frameResult);
+    toast("已找到真实时刻：" + best.timeFormatted, 3200);
+  } else {
+    // 未命中：如实列出候选供手动
+    const reason = r?.reason || "片源受登录/DRM 保护，浏览器无法抓取视频画面";
+    el.asResult.innerHTML =
+      `<div class="as-result-head">多开播放未能抓到可比对画面</div>` +
+      `<div class="as-result-line">${reason}。你可以：<br>` +
+      `① 点击候选打开页面，在平台内查看该集；② 下载对应视频后，用下方「视频帧精确比对」上传本地文件得到真实时刻。</div>`;
+    await buildFinalConclusion(data, null);
+  }
 }
 
 /** 兜底主流程 */
@@ -1588,20 +1649,12 @@ async function runAutoSource(auto = false) {
         await buildFinalConclusion(data, r);
         toast("已找到真实时刻：" + (r.timeFormatted || "完成"), 3200);
       } else {
-        el.asError.textContent = "片源探测可读但实际比对失败，可能视频过大或格式不支持。请下载该片源后用「视频帧精确比对」本地比对。";
-        el.asError.classList.remove("hidden");
-        await buildFinalConclusion(data, null);
+        // 直读比对失败 → 回退到多开播放比对
+        await tryBrowserMatchFallback(data, sources);
       }
     } else {
-      // 步骤4：无可直读片源 → 列出候选供用户处理，仍给综合结论
-      asSetProgress(100, "片源需人工处理");
-      el.asSourcesLabel.textContent = "找到的片源候选（均不可直读，多为平台页面）";
-      el.asResult.classList.remove("hidden");
-      el.asResult.innerHTML =
-        `<div class="as-result-head">已找到片源线索，但无法直接逐帧比对</div>` +
-        `<div class="as-result-line">这些平台页面有防盗链，系统无法直接读取视频。你可以：<br>` +
-        `① 点击候选打开页面，在平台内查看该集；② 下载对应视频后，用下方「视频帧精确比对」上传本地文件得到真实时刻。</div>`;
-      await buildFinalConclusion(data, null);
+      // 步骤4：无可直读片源 → 多开浏览器播放抓帧比对（核心升级）
+      await tryBrowserMatchFallback(data, sources);
     }
   } catch (e) {
     el.asError.textContent = e?.message || "自动找片源流程出错";
@@ -1631,6 +1684,34 @@ function autoMatchUrl(videoUrl, onProgress, data) {
         if (typeof d.progress === "number") onProgress?.(d.progress, d.label);
         if (d.status === "done") { settled = true; es.close(); resolve(d.result); }
         else if (d.status === "error") { settled = true; es.close(); resolve(null); }
+      };
+      es.onerror = () => { if (!settled) { settled = true; es.close(); resolve(null); } };
+    } catch (_) { resolve(null); }
+  });
+}
+
+/**
+ * 多开播放比对：浏览器并发打开多个片源页，抓帧定位真实时刻（复用 /api/browser-match + SSE）
+ * @param {string[]} urls 候选片源 URL
+ * @param {(p:number,label:string)=>void} onProgress 进度回调
+ * @returns {Promise<object|null>} 服务端 result（含 best / results），失败返回 null
+ */
+function runBrowserMatch(urls, onProgress) {
+  return new Promise(async (resolve) => {
+    try {
+      const form = new FormData();
+      form.append("screenshot", state.file, state.file.name || "screenshot.png");
+      form.append("urls", JSON.stringify(urls));
+      const resp = await fetch(FM_API_BASE + "/api/browser-match", { method: "POST", body: form });
+      if (!resp.ok) return resolve(null);
+      const { jobId } = await resp.json();
+      const es = new EventSource(FM_API_BASE + "/api/stream/" + encodeURIComponent(jobId));
+      let settled = false;
+      es.onmessage = (ev) => {
+        let d; try { d = JSON.parse(ev.data); } catch (_) { return; }
+        if (typeof d.progress === "number") onProgress?.(d.progress, d.label);
+        if (d.status === "done") { settled = true; es.close(); resolve(d.result); }
+        else if (d.status === "error") { settled = true; es.close(); resolve(d.result || null); }
       };
       es.onerror = () => { if (!settled) { settled = true; es.close(); resolve(null); } };
     } catch (_) { resolve(null); }
@@ -1766,7 +1847,7 @@ function renderFinalConclusion(c, data, frameResult) {
   });
 
   const notes = [c.note];
-  if (!frameResult) notes.push("提示：点击上方「搜索片源并自动比对」或「视频帧精确比对」上传该集视频，可获得真实精确时刻。");
+  if (!frameResult) notes.push("提示：点击上方「搜索片源并多开比对」自动播放各片源抓帧定位，或用「视频帧精确比对」上传该集视频，可获得真实精确时刻。");
   el.finalNote.textContent = notes.filter(Boolean).join(" ");
 }
 

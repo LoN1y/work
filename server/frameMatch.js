@@ -212,4 +212,4 @@ function formatTime(sec) {
     : `${String(m).padStart(2, "0")}:${ss}`;
 }
 
-module.exports = { locateMoment, formatTime, imageToGray, extractFrames };
+module.exports = { locateMoment, formatTime, imageToGray, extractFrames, dHash, hamming, ncc, bestMatch, FRAME_SIZE };
