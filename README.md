@@ -17,11 +17,11 @@
 index.html / styles.css / app.js   前端
 server/                            后端（联网搜索 + 帧比对，需本地运行）
   server.js / frameMatch.js / webSearch.js / package.json
-devtool.js / backup.bat / restore.bat / 修改记录.md   备份与变更记录
+devtool.js / 修改记录.md   修改记录工具与变更日志（本地备份已取消，见版本目录.md）
 启动网站.bat                       Windows 一键启动完整服务
 ```
 
-> `.gitignore` 排除 `node_modules`、备份目录与浏览器缓存。
+> 历史版本统一归档在本仓库 `1/`～`14/` 文件夹，本地不再保留 `.backup` 备份副本。
 
 ## 版本归档
 
